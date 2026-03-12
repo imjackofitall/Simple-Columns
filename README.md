@@ -120,6 +120,8 @@ The **Local Settings** allow you to apply more **granular customizations** to in
 - **Set Text Color**
 - **Set Background Color and Transparency**
 - **Set Text Alignment**: Align the text within the column (e.g., `left`, `center`, `right`).
+- **Row Height**: Set a fixed height per row for a column (e.g., `50px`, `3em`). Each line of content becomes its own row. Leave empty for default single-block rendering. **Note:** Multi-line markdown elements (tables, code blocks) won't work in row-height mode since each line is rendered independently.
+- **Padding (left / right)**: Set the left and right inner padding for a column individually (e.g., `20px`, `1em`). Useful if content such as callouts is being clipped on the edges.
 
 ## 📦 Installation
 This plugin is now available in the Obsidian Community Plugins! 🎉

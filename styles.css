@@ -14,13 +14,13 @@ If your plugin does not need CSS, delete this file.
   display: flex;
   gap: 0;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   margin: 0.8em 0;
 }
 .markdown-columns-resizable .column {
   padding: 0.8em;
   overflow-wrap: break-word;
-  overflow: auto;
+  overflow: visible;
   min-width: 5px;
 }
 
@@ -47,7 +47,32 @@ If your plugin does not need CSS, delete this file.
 .column-style {
   background-color: var(--sc-column-bg, var(--background-primary));
   color: var(--sc-column-text-color, var(--text-normal));
-  flex: 1 0 var(--sc-column-width);
+  flex: 0 1 var(--sc-column-width);
+}
+
+/* Row height */
+.column-row {
+    overflow: visible;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+.column-row > * {
+    margin: 0;
+    width: 100%;
+}
+.column-row [data-task="0"],
+.column-row [data-task="1"],
+.column-row [data-task="2"],
+.column-row [data-task="3"],
+.column-row [data-task="4"],
+.column-row [data-task="5"],
+.column-row [data-task="6"],
+.column-row [data-task="7"],
+.column-row [data-task="8"],
+.column-row [data-task="9"] {
+    margin-inline-start: 0 !important;
+    padding-inline-start: 16px !important;
 }
 
 /* Resizer */

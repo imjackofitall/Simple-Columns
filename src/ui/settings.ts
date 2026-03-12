@@ -57,6 +57,7 @@ export class ColumnWidthsSettingTab extends PluginSettingTab {
 		document.documentElement.style.setProperty('--sc-resizer-bg', showResizer ? finalResizerColor : 'transparent');
 		document.documentElement.style.setProperty('--sc-resizer-hover-bg', finalResizerColor);
 		document.documentElement.style.setProperty('--sc-resizer-width', `${resizerWidth}px`);
+
 	}		
 
     display(): void {

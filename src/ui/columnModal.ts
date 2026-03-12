@@ -1,4 +1,4 @@
-import { App, ButtonComponent, Modal, Notice, Setting } from "obsidian";
+import { App, ButtonComponent, MarkdownView, Modal, Notice, Setting } from "obsidian";
 import { convertToRGBA, hexToRGBA, rgbToHex } from "./colorUtils";
 import ColumnsPlugin from "main";
 
@@ -55,6 +55,16 @@ function applyColumnTextColorStyles(blockId: string, textColors: Record<number, 
 	}
 }
 
+function applyColumnPaddingStyles(blockId: string, paddings: Record<number, { left: string; right: string }>) {
+	for (const [index, padding] of Object.entries(paddings)) {
+		const col = document.querySelector(`.markdown-columns-resizable[id="${blockId}"] > .column[data-index="${index}"]`);
+		if (col instanceof HTMLElement) {
+			col.style.paddingLeft = padding.left || '';
+			col.style.paddingRight = padding.right || '';
+		}
+	}
+}
+
 function applyBorderStyles(blockId: string, borderColorRGB: string, showBorder: boolean) {
     const block = document.querySelector(`.markdown-columns-resizable[id="${blockId}"]`);
     if (block instanceof HTMLElement) {
@@ -89,11 +99,14 @@ export class CustomiseColumnsModal extends Modal {
 	borderColorRGB: string;
 	columnAlignments: Record<number, "left" | "center" | "right">;
     columnBackgrounds: Record<number, string> = {}; 
-    columnTextColors: Record<number, string> = {}; 
+    columnTextColors: Record<number, string> = {};
+	allRowHeight: string = '';
+	columnRowHeights: Record<number, string> = {};
+	columnPaddings: Record<number, { left: string; right: string }> = {};
 	showBorder: boolean;
 	showResizer: boolean;
 
-	constructor(app: App, plugin: ColumnsPlugin, blockId: string, numberOfColumns: number, columnAlignments: Record<number, "left" | "center" | "right"> = {}, columnBackgrounds: Record<number, string> = {}, columnTextColors: Record<number, string> = {}) {   
+	constructor(app: App, plugin: ColumnsPlugin, blockId: string, numberOfColumns: number, columnAlignments: Record<number, "left" | "center" | "right"> = {}, columnBackgrounds: Record<number, string> = {}, columnTextColors: Record<number, string> = {}, columnRowHeights: Record<number, string> = {}, columnPaddings: Record<number, { left: string; right: string }> = {}) {
 		super(app);
 		this.plugin = plugin;
 		this.blockId = blockId;
@@ -101,6 +114,11 @@ export class CustomiseColumnsModal extends Modal {
 		this.columnAlignments = columnAlignments;
         this.columnBackgrounds = columnBackgrounds;
         this.columnTextColors = columnTextColors;
+		this.columnRowHeights = columnRowHeights;
+		this.columnPaddings = columnPaddings;
+
+		const savedAllRowHeight = this.app.loadLocalStorage(`sc-allRowHeight-${blockId}`);
+		this.allRowHeight = savedAllRowHeight ? JSON.parse(savedAllRowHeight) : '';
 
 		const borderData = JSON.parse(this.app.loadLocalStorage(`sc-borderColor-${this.blockId}`) || '{}');
 		this.showBorder = borderData.show ?? this.plugin.settings.showBorders;
@@ -136,7 +154,10 @@ export class CustomiseColumnsModal extends Modal {
 				  'sc-resizerColor',
 				  'sc-columnAlignments',
 				  'sc-columnBackgrounds',
-				  'sc-columnTextColors'
+				  'sc-columnTextColors',
+				  'sc-columnRowHeights',
+				  'sc-columnPaddings',
+				  'sc-allRowHeight'
 				];
 
 				Object.keys(localStorage).forEach((key) => {
@@ -149,6 +170,9 @@ export class CustomiseColumnsModal extends Modal {
 		        this.columnAlignments = {};
 		        this.columnBackgrounds = {};
 		        this.columnTextColors = {};
+				this.allRowHeight = '';
+				this.columnRowHeights = {};
+				this.columnPaddings = {};
 
 				clearBlockStyles(this.blockId, this.numberOfColumns)
 			
@@ -240,6 +264,17 @@ export class CustomiseColumnsModal extends Modal {
 			    });
 			});
 									
+		// Row Height for all columns
+		new Setting(contentEl)
+			.setName('Row height (all columns)')
+			.setDesc('Fixed height per row for all columns (e.g. 50px, 3em). Per-column values override this.')
+			.addText(text => text
+				.setPlaceholder('')
+				.setValue(this.allRowHeight)
+				.onChange((value) => {
+					this.allRowHeight = value.trim();
+				}));
+
 		// Column Settings
   		for (let i = 1; i <= this.numberOfColumns; i++) {
 	        // Ensure default alignment
@@ -336,6 +371,47 @@ export class CustomiseColumnsModal extends Modal {
 	    		btn.buttonEl.classList.add("active");
 	    	}
 	    });
+
+		// Row Height Setting
+		new Setting(columnGroup)
+			.setName('Row height')
+			.setDesc('Overrides the all-columns row height for this column.')
+			.addText(text => text
+				.setPlaceholder('')
+				.setValue(this.columnRowHeights[i] || '')
+				.onChange((value) => {
+					if (value.trim()) {
+						this.columnRowHeights[i] = value.trim();
+					} else {
+						delete this.columnRowHeights[i];
+					}
+				}));
+
+		// Padding Left/Right Setting
+		const currentPadding = this.columnPaddings[i] || { left: '', right: '' };
+		new Setting(columnGroup)
+			.setName('Padding (left / right)')
+			.setDesc('Inner padding for this column (e.g. 20px, 1em). Leave empty for default.')
+			.addText(text => text
+				.setPlaceholder('left')
+				.setValue(currentPadding.left)
+				.onChange((value) => {
+					if (!this.columnPaddings[i]) this.columnPaddings[i] = { left: '', right: '' };
+					this.columnPaddings[i].left = value.trim();
+					if (!this.columnPaddings[i].left && !this.columnPaddings[i].right) {
+						delete this.columnPaddings[i];
+					}
+				}))
+			.addText(text => text
+				.setPlaceholder('right')
+				.setValue(currentPadding.right)
+				.onChange((value) => {
+					if (!this.columnPaddings[i]) this.columnPaddings[i] = { left: '', right: '' };
+					this.columnPaddings[i].right = value.trim();
+					if (!this.columnPaddings[i].left && !this.columnPaddings[i].right) {
+						delete this.columnPaddings[i];
+					}
+				}));
     }}
 
 
@@ -381,5 +457,47 @@ export class CustomiseColumnsModal extends Modal {
             const backgroundKey = `sc-columnBackgrounds-${this.blockId}`;
             this.app.saveLocalStorage(backgroundKey, JSON.stringify(this.columnBackgrounds));
         }
+
+		const allRowHeightKey = `sc-allRowHeight-${this.blockId}`;
+		if (this.allRowHeight) {
+			this.app.saveLocalStorage(allRowHeightKey, JSON.stringify(this.allRowHeight));
+		} else {
+			this.app.saveLocalStorage(allRowHeightKey, null);
+		}
+
+		const rowHeightKey = `sc-columnRowHeights-${this.blockId}`;
+		if (Object.keys(this.columnRowHeights).length != 0) {
+			this.app.saveLocalStorage(rowHeightKey, JSON.stringify(this.columnRowHeights));
+		} else {
+			this.app.saveLocalStorage(rowHeightKey, null);
+		}
+
+		const paddingKey = `sc-columnPaddings-${this.blockId}`;
+		const hasAnyPadding = Object.values(this.columnPaddings).some(p => p.left || p.right);
+		if (hasAnyPadding) {
+			applyColumnPaddingStyles(this.blockId, this.columnPaddings);
+			this.app.saveLocalStorage(paddingKey, JSON.stringify(this.columnPaddings));
+		} else {
+			// Clear padding styles on all columns
+			const container = document.querySelector(`.markdown-columns-resizable[id="${this.blockId}"]`);
+			if (container) {
+				container.querySelectorAll('.column').forEach(col => {
+					if (col instanceof HTMLElement) {
+						col.style.paddingLeft = '';
+						col.style.paddingRight = '';
+					}
+				});
+			}
+			this.app.saveLocalStorage(paddingKey, null);
+		}
+
+		// Row height changes require a full re-render since they change DOM structure
+		// Trigger all markdown code block processors to re-run
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			if (leaf.view instanceof MarkdownView) {
+				// @ts-ignore - internal API to force re-render of code blocks
+				leaf.view.leaf.rebuildView();
+			}
+		});
 	}
 }
