@@ -1,5 +1,5 @@
 import { createMarkdownColumns } from 'src/ui/createColumns';
-import { MarkdownRenderer, MarkdownView, Plugin } from 'obsidian';
+import { MarkdownRenderer, Plugin } from 'obsidian';
 import { CustomiseColumnsModal } from 'src/ui/columnModal';	
 import { DEFAULT_SETTINGS, ColumnsPluginSettings, ColumnWidthsSettingTab } from 'src/ui/settings';
 import { createCustomiseButton } from 'src/ui/button';
@@ -125,7 +125,7 @@ export default class ColumnsPlugin extends Plugin {
 				const resizerPercent = (resizerWidthPx / containerWidth) * 100;
 				const totalResizers = Math.max(totalCols - 1, 0);
 				const totalResizerPercent = resizerPercent * totalResizers;
-				let remainingPercent = 100 - totalResizerPercent;
+				const remainingPercent = 100 - totalResizerPercent;
 
 				const providedSum = providedRatios.reduce((a, b) => a + b, 0);
 				const zeroCount = providedRatios.filter(r => r === 0).length;
@@ -212,7 +212,7 @@ export default class ColumnsPlugin extends Plugin {
 
 				if (savedResizerColor) {
 				  const styleId = `sc-resizer-hover-style-${blockId}`;
-				  let existing = document.getElementById(styleId);
+				  const existing = document.getElementById(styleId);
 				  if (existing) existing.remove(); // Clean up previous style
 								
 				  const css = `.markdown-columns-resizable[id="${blockId}"] > .column-resizer:hover {

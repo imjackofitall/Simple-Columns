@@ -73,8 +73,8 @@ function applyResizerStyles(blockId: string, resizerColorRGB: string, showResize
 				resizer.style.setProperty("--sc-resizer-bg", showResizer ? resizerColorRGB : "transparent");
 			}
         });
-		let css = `.markdown-columns-resizable[id="${blockId}"] > .column-resizer:hover{ background-color: ${resizerColorRGB} !important; }`;
-		let hoverStyle = document.createElement('style');
+		const css = `.markdown-columns-resizable[id="${blockId}"] > .column-resizer:hover{ background-color: ${resizerColorRGB} !important; }`;
+		const hoverStyle = document.createElement('style');
 		document.head.appendChild(hoverStyle);
 		hoverStyle.textContent = css;	
     }
@@ -275,7 +275,7 @@ export class CustomiseColumnsModal extends Modal {
 
 				// Color picker:
   				.addColorPicker((picker) => {
-  				  let initial = this.columnBackgrounds[i] || getComputedStyle(document.body).getPropertyValue("--background-primary").trim();
+  				  const initial = this.columnBackgrounds[i] || getComputedStyle(document.body).getPropertyValue("--background-primary").trim();
   				  picker.setValue(rgbToHex(initial));
   				  picker.onChange((hex) => {
   				    const currentMatch = initial.match(/rgb\((\d+), (\d+), (\d+), ([\d.]+)\)/);
@@ -286,7 +286,7 @@ export class CustomiseColumnsModal extends Modal {
   				})
 				// Transparency text input (0–100%)
   				.addText((text) => {
-  				  let current = this.columnBackgrounds[i] || "var(--background-primary)";	
+  				  const current = this.columnBackgrounds[i] || "var(--background-primary)";	
   				  const match = current.match(/rgb\((\d+), (\d+), (\d+), ([\d.]+)\)/);
 			  	  const alphaPercent = match ? Math.round(parseFloat(match[4]) * 100) : 100;
   				  text
