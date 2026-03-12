@@ -57,6 +57,7 @@ export class ColumnWidthsSettingTab extends PluginSettingTab {
 		document.documentElement.style.setProperty('--sc-resizer-bg', showResizer ? finalResizerColor : 'transparent');
 		document.documentElement.style.setProperty('--sc-resizer-hover-bg', finalResizerColor);
 		document.documentElement.style.setProperty('--sc-resizer-width', `${resizerWidth}px`);
+
 	}		
 
     display(): void {
@@ -215,7 +216,7 @@ export class ColumnWidthsSettingTab extends PluginSettingTab {
                 .setWarning()
                 .onClick(async () => {
 					// Clear all local storage keys that contains 'sc-' --> custom simple columns styles
-                    for (let key in localStorage) {
+                    for (const key in localStorage) {
 					  if (key.contains('sc-')) {
 					    localStorage.removeItem(key);
 					  }
